@@ -1,0 +1,31 @@
+pipeline {
+    agent any 
+    
+    environment {
+        AWS_ACCESS_KEY_ID = credentials ('AWS_ACCESS_KEY_ID')
+        AWS_SECRET_ACCESS_KEY = credentials ('AWS_SECRET_ACCESS_KEY')
+    }
+    
+    stages {
+        stage ("download code and env config") {
+            steps {
+                sh 'git clone https://github.com/github-kits26kat24/Tool-Server-23.git'
+            }
+        }
+        stage ('apply teraform') {
+            steps {
+                sh '''
+                   cd codebase
+                   terraform init -backend-config=../env/dev/backend.tfvars
+                   terraform apply -var-file ../env/dev/backend.tfvars  -var-file ../env/dev/ec2.tfvars -auto-approve
+                '''
+            }
+        }
+    }
+    
+    post {
+        always {
+            deleteDir()
+        }
+    }
+}
